@@ -3,8 +3,9 @@ import 'package:bluetooth_scale/model/customer.dart';
 import 'package:get/get.dart';
 
 class CustomerController extends GetxController {
+  static CustomerController instance = Get.find();
   final Rx<List<Customer>> _customers = Rx<List<Customer>>([]);
-  List<Customer> get customerr => _customers.value;
+  List<Customer> get customers => _customers.value;
   DBHelper? _dbHelper;
 
   @override
@@ -28,7 +29,7 @@ class CustomerController extends GetxController {
     await loadCustomers();
   }
 
-  void deleteCustomer(String uid) async {
+  Future<void> deleteCustomer(String uid) async {
     await _dbHelper!.deleteCustomer(uid);
     await loadCustomers();
   }

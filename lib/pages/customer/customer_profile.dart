@@ -1,13 +1,14 @@
 import 'dart:io';
 
 import 'package:bluetooth_scale/db/db_helper.dart';
-import 'package:bluetooth_scale/utils/blue_singleton.dart';
+import 'package:bluetooth_scale/model/customer.dart';
+import 'package:bluetooth_scale/model/transactionx.dart';
+import 'package:bluetooth_scale/utils/constants.dart';
+import 'package:bluetooth_scale/utils/pdf_api.dart';
+import 'package:bluetooth_scale/utils/pdf_invoice_api.dart';
+import 'package:bluetooth_scale/widgets/customer_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../model/customer.dart';
-import '../../model/transactionx.dart';
-import '../../utils/pdf_api.dart';
-import '../../utils/pdf_invoice_api.dart';
+import 'package:get/get.dart';
 import 'edit_customer.dart';
 
 class CustomerProfile extends StatefulWidget {
@@ -18,7 +19,7 @@ class CustomerProfile extends StatefulWidget {
 }
 
 class _CustomerProfileState extends State<CustomerProfile> {
-  late Customer customer;
+  late Rx<Customer> customer = Rx<Customer>(widget.customer);
   DBHelper? dbHelper;
   List<TransactionX> txlist = [];
 
@@ -26,14 +27,13 @@ class _CustomerProfileState extends State<CustomerProfile> {
 
   @override
   void initState() {
-    customer = widget.customer;
     dbHelper ??= DBHelper();
     refreshList();
     super.initState();
   }
 
   Future<void> refreshList() async {
-    List<TransactionX> temp = await dbHelper!.getCustomerTx(customer.uid);
+    List<TransactionX> temp = await dbHelper!.getCustomerTx(customer.value.uid);
     setState(() {
       txlist = temp;
     });
@@ -45,17 +45,6 @@ class _CustomerProfileState extends State<CustomerProfile> {
       floatingActionButton: txlist.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () async {
-                if (Singleton().name == '' ||
-                    Singleton().email == '' ||
-                    Singleton().phone == '') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Update Seller profile first'),
-                    duration: Duration(seconds: 2),
-                    backgroundColor: Colors.red,
-                  ));
-                  return;
-                }
-
                 await refreshList();
                 if (txlist.isNotEmpty) {
                   try {
@@ -67,8 +56,8 @@ class _CustomerProfileState extends State<CustomerProfile> {
                     //     '$_filePath/${customer.name}_${formatter.format(DateTime.now())}.pdf');
                     final pdf = await PdfInvoiceApi.generate(
                         loc:
-                            '$_filePath/${customer.name}_${customer.phone}.pdf',
-                        customer: customer,
+                            '$_filePath/${customer.value.name}_${customer.value.phone}.pdf',
+                        customer: customer.value,
                         transactions: txlist);
                     PdfApi.openFile(pdf);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +80,7 @@ class _CustomerProfileState extends State<CustomerProfile> {
                   builder: (builder) => AlertDialog(
                         title: const Text('Delete Customer'),
                         content: Text(
-                            'Also ${customer.name}\'s purchase history will be deleted'),
+                            'Also ${customer.value.name}\'s purchase history will be deleted'),
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -99,9 +88,9 @@ class _CustomerProfileState extends State<CustomerProfile> {
                           TextButton(
                               onPressed: () async {
                                 Navigator.pop(context);
-                                await dbHelper!
-                                    .deleteCustomer(customer.uid)
-                                    .then((value) => Navigator.pop(context));
+                                await customerController
+                                    .deleteCustomer(customer.value.uid);
+                                Navigator.pop(context);
                                 ScaffoldMessenger.of(context)
                                     .showSnackBar(const SnackBar(
                                   content: Text('Deleted'),
@@ -125,151 +114,96 @@ class _CustomerProfileState extends State<CustomerProfile> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            customerDetail(context),
+            Obx(() {
+              return CustomerWidget(
+                  customer: customer.value,
+                  onEdit: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (builder) {
+                      return EditCustomer(
+                        customer: customer.value,
+                      );
+                    })).then((value) {
+                      if (value != null) {
+                        customer.value = value;
+                      }
+                    });
+                  });
+            }),
             const Padding(
               padding: EdgeInsets.all(6.0),
               child: Text('Purchased History',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
             Flexible(
-              child: RefreshIndicator(
-                onRefresh: () => refreshList(),
-                child: txlist.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Text(
-                              'History is empty',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            Text(
-                              '( ་ ⍸ ་ )',
-                              style: TextStyle(
-                                  fontSize: 24, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: txlist.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return ListTile(
-                            tileColor:
-                                index % 2 == 0 ? Colors.grey.shade100 : null,
-                            // title: Text(txlist[index].customerName),
-                            title: Text(
-                              txlist[index].date,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            trailing: Text('${txlist[index].weight} g'),
-                            onTap: () {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                backgroundColor: Colors.blue,
-                                content: Text('Hold to delete'),
-                                duration: Duration(seconds: 1),
-                              ));
-                            },
-                            onLongPress: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (builder) => AlertDialog(
-                                        title: const Text('Want to Delete?'),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: const Text('Cancel')),
-                                          TextButton(
-                                              onPressed: () {
-                                                dbHelper!.deleteTransaction(
-                                                    txlist[index].tid!);
-                                                refreshList();
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                    color: Colors.red),
-                                              ))
-                                        ],
-                                      ));
-                            },
-                          );
-                        },
+              child: txlist.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text(
+                            'History is empty',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            '( ་ ⍸ ་ )',
+                            style: TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-              ),
+                    )
+                  : ListView.builder(
+                      itemCount: txlist.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return ListTile(
+                          tileColor:
+                              index % 2 == 0 ? Colors.grey.shade100 : null,
+                          // title: Text(txlist[index].customerName),
+                          title: Text(
+                            txlist[index].date,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          trailing: Text('${txlist[index].weight} g'),
+                          onTap: () {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              backgroundColor: Colors.blue,
+                              content: Text('Hold to delete'),
+                              duration: Duration(seconds: 1),
+                            ));
+                          },
+                          onLongPress: () {
+                            showDialog(
+                                context: context,
+                                builder: (builder) => AlertDialog(
+                                      title: const Text('Want to Delete?'),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('Cancel')),
+                                        TextButton(
+                                            onPressed: () {
+                                              dbHelper!.deleteTransaction(
+                                                  txlist[index].tid!);
+                                              refreshList();
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text(
+                                              'Delete',
+                                              style:
+                                                  TextStyle(color: Colors.red),
+                                            ))
+                                      ],
+                                    ));
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget customerDetail(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 6, bottom: 10),
-      child: Row(
-        children: [
-          CircleAvatar(
-              backgroundColor: Colors.grey.shade100,
-              radius: 60,
-              child: Text(
-                customer.name.substring(0, 1).toUpperCase(),
-                style:
-                    const TextStyle(fontSize: 60, fontWeight: FontWeight.bold),
-              )),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.only(left: 10),
-                child: Text(
-                  customer.name.length > 13
-                      ? customer.name.substring(0, 13) + '...'
-                      : customer.name,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Text(
-                  'ID : ${customer.uid}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.grey),
-                ),
-              ),
-              ButtonBar(
-                children: [
-                  ElevatedButton.icon(
-                      icon: const Icon(Icons.call),
-                      onPressed: () =>
-                          launchUrl(Uri.parse('tel:${customer.phone}')),
-                      label: const Text('Call')),
-                  ElevatedButton.icon(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (builder) {
-                          return EditCustomer(
-                            customer: customer,
-                          );
-                        })).then((value) {
-                          if (value != null) {
-                            setState(() {
-                              customer = value;
-                            });
-                          }
-                        });
-                      },
-                      label: const Text('Edit')),
-                ],
-              )
-            ],
-          ),
-        ],
       ),
     );
   }

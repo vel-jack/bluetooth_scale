@@ -1,5 +1,5 @@
-import 'package:bluetooth_scale/db/db_helper.dart';
 import 'package:bluetooth_scale/model/customer.dart';
+import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -17,21 +17,15 @@ class _EditCustomerState extends State<EditCustomer> {
   final phoneC = TextEditingController();
   final aadhaarC = TextEditingController();
   final addressC = TextEditingController();
-  final RegExp _number = RegExp(r'^[0-9]{10}$');
-  final RegExp _aadhaar = RegExp(r'^[0-9]{12}$');
-  final RegExp _name = RegExp(r'^[A-Za-z ]+$');
-  final RegExp _address = RegExp(r'^[0-9A-Za-z ,.&/\n]+$');
 
   List<String> uID = ['', '', ''];
   ValueNotifier<String> custId = ValueNotifier('');
   final DateFormat formatter = DateFormat('dd/MM/yyyy hh:mm aa');
   bool isNew = true;
-  DBHelper? dbHelper;
 
   @override
   void initState() {
     super.initState();
-    dbHelper ??= DBHelper();
     if (widget.customer != null) {
       fillForm(widget.customer!);
     }
@@ -67,17 +61,15 @@ class _EditCustomerState extends State<EditCustomer> {
                     aadhaar: aadhaarC.text,
                     address: addressC.text.trim(),
                   );
-                  //   phoneC.text, custId.value, aadhaarC.text, addressC.text
+
                   if (isNew) {
                     customer.createdAt = getDateTime();
-                    await dbHelper!
-                        .addCustomer(customer)
-                        .then((value) => Navigator.pop(context, customer));
+                    customerController.addCutomer(customer);
+                    Navigator.pop(context, customer);
                   } else {
                     customer.createdAt = widget.customer!.createdAt;
-                    await dbHelper!
-                        .updateCustomer(customer)
-                        .then((value) => Navigator.pop(context, customer));
+                    customerController.updateCustomer(customer);
+                    Navigator.pop(context, customer);
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -104,7 +96,7 @@ class _EditCustomerState extends State<EditCustomer> {
                     if (value.isEmpty) {
                       return 'Please enter name';
                     } else {
-                      if (!_name.hasMatch(value)) {
+                      if (!regExForName.hasMatch(value)) {
                         return 'Only alphabets and spaces accepted';
                       }
                     }
@@ -133,7 +125,7 @@ class _EditCustomerState extends State<EditCustomer> {
                   controller: phoneC,
                   maxLength: 10,
                   validator: (value) {
-                    if (!_number.hasMatch(value!)) {
+                    if (!regExForPhone.hasMatch(value!)) {
                       return 'Please enter valid number';
                     }
                     return null;
@@ -165,7 +157,7 @@ class _EditCustomerState extends State<EditCustomer> {
                   },
                   controller: aadhaarC,
                   validator: (value) {
-                    if (!_aadhaar.hasMatch(value!)) {
+                    if (!regExForAadhaar.hasMatch(value!)) {
                       return 'Please enter valid Aadhar';
                     }
                     return null;
@@ -190,7 +182,7 @@ class _EditCustomerState extends State<EditCustomer> {
                     if (value!.isEmpty) {
                       return 'Please enter address';
                     } else {
-                      if (!_address.hasMatch(value)) {
+                      if (!regExForAddress.hasMatch(value)) {
                         return 'Some characters not supported';
                       }
                     }

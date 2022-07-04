@@ -1,4 +1,5 @@
 import 'package:bluetooth_scale/controller/bluetooth_controller.dart';
+import 'package:bluetooth_scale/controller/customer_controller.dart';
 import 'package:bluetooth_scale/controller/owner_controller.dart';
 import 'package:bluetooth_scale/pages/home.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   Get.put(BluetoothController());
   Get.put(OwnerController());
+  Get.put(CustomerController());
   runApp(const MyApp());
 }
 
