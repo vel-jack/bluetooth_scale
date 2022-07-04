@@ -2,23 +2,20 @@ import 'dart:async';
 
 import 'dart:typed_data';
 import 'package:bluetooth_scale/db/db_helper.dart';
-import 'package:bluetooth_scale/logic/connection/ble_cnx_cubit.dart';
 import 'package:bluetooth_scale/model/transactionx.dart';
 import 'package:bluetooth_scale/pages/customer/edit_customer.dart';
+import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:intl/intl.dart';
 import 'package:search_page/search_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import '../model/customer.dart';
 import '../utils/blue_singleton.dart';
 import 'customer/customer_list.dart';
 
 class AddScale extends StatefulWidget {
-  const AddScale({Key? key, required this.connection}) : super(key: key);
-  final BluetoothConnection connection;
+  const AddScale({Key? key}) : super(key: key);
+
   @override
   _AddScaleState createState() => _AddScaleState();
 }
@@ -41,31 +38,14 @@ class _AddScaleState extends State<AddScale> {
   Customer? currentCustomer;
   final DateFormat formatter = DateFormat('dd/MM/yyyy hh:mm aa');
   StreamSubscription<Uint8List>? streamSubscription;
-  bool isConnected = true;
+
   @override
   void initState() {
     dbHelper ??= DBHelper();
     limit = Singleton().limit;
     retriveCustomers();
     setDate();
-    widget.connection.input!.listen(onDataReceived).onDone(() {
-      if (mounted) {
-        setState(() {
-          isConnected = false;
-        });
-      }
-    });
-    FlutterBluetoothSerial.instance.onStateChanged().listen((event) {
-      if (mounted) {
-        if (event == BluetoothState.STATE_OFF) {
-          showMessage(
-              msg: 'Check your bluetooth!', color: Colors.red, duration: 1000);
-          debugPrint('Check your bluetooth $event');
-          BlocProvider.of<ConnectionCubit>(context).emitDisconnect();
-          Navigator.pop(context);
-        }
-      }
-    });
+    // bluetoothController.connection!.input!.listen(onDataReceived).onDone(() {});
     super.initState();
   }
 
@@ -110,65 +90,9 @@ class _AddScaleState extends State<AddScale> {
         return false;
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Add Weight'), actions: [
-          !isConnected
-              ? const Tooltip(
-                  message: 'Device Disconnected',
-                  child: Icon(
-                    Icons.error,
-                    color: Colors.red,
-                  ),
-                  triggerMode: TooltipTriggerMode.tap,
-                )
-              : const Tooltip(
-                  message: 'Device connected',
-                  child: Icon(
-                    Icons.bluetooth_connected,
-                    color: Colors.blue,
-                  ),
-                  triggerMode: TooltipTriggerMode.tap,
-                ),
-          IconButton(
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return SimpleDialog(
-                        title: const Text(
-                          'Select Limit',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        children: [300.0, 600.0, 1200.0].map((i) {
-                          return ListTile(
-                            title: Text("$i Gram",
-                                style: i == limit
-                                    ? const TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.bold)
-                                    : null),
-                            trailing: i == limit
-                                ? const Icon(
-                                    Icons.done,
-                                    color: Colors.blue,
-                                  )
-                                : null,
-                            onTap: () async {
-                              var prefs = await SharedPreferences.getInstance();
-                              await prefs.setDouble("limit", i);
-                              setState(() {
-                                limit = i;
-                                Singleton().limit = i;
-                              });
-                              Navigator.pop(context);
-                            },
-                          );
-                        }).toList());
-                  });
-            },
-            icon: const Icon(Icons.tune),
-            tooltip: 'Adjust limit',
-          ),
-        ]),
+        appBar: AppBar(
+          title: const Text('Add Weight'),
+        ),
         body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(
               color: Colors.white,
@@ -204,7 +128,7 @@ class _AddScaleState extends State<AddScale> {
                       ),
                     ),
                     onTap: () {
-                      if (!isConnected) {
+                      if (!bluetoothController.isConnected) {
                         showMessage(
                             msg:
                                 'Please go back and CONNECT the device again !',
@@ -410,7 +334,7 @@ class _AddScaleState extends State<AddScale> {
                             child: ElevatedButton.icon(
                               onPressed: currentCustomer != null
                                   ? () {
-                                      if (!isConnected) {
+                                      if (!bluetoothController.isConnected) {
                                         showMessage(
                                             msg:
                                                 'Please go back and CONNECT the device again !',
@@ -442,7 +366,7 @@ class _AddScaleState extends State<AddScale> {
                               label: isStarted
                                   ? const Text('Stop')
                                   : const Text('Start'),
-                              icon: isConnected
+                              icon: bluetoothController.isConnected
                                   ? isStarted
                                       ? const Icon(Icons.stop)
                                       : const Icon(Icons.play_arrow)
@@ -451,7 +375,7 @@ class _AddScaleState extends State<AddScale> {
                                       color: Colors.white,
                                     ),
                               style: ElevatedButton.styleFrom(
-                                  primary: isConnected
+                                  primary: bluetoothController.isConnected
                                       ? isStarted
                                           ? Colors.red
                                           : Colors.green
@@ -467,7 +391,7 @@ class _AddScaleState extends State<AddScale> {
                             child: ElevatedButton.icon(
                               onPressed: isStarted
                                   ? () {
-                                      if (!isConnected) {
+                                      if (!bluetoothController.isConnected) {
                                         showMessage(
                                             msg:
                                                 'Go back and connect the device !',

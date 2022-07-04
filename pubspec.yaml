@@ -29,11 +29,10 @@ environment:
 dependencies:
   backdrop: ^0.8.0
   cupertino_icons: ^1.0.4
-  equatable: ^2.0.3
   flutter:
     sdk: flutter
-  flutter_bloc: ^8.0.1
   flutter_bluetooth_serial: ^0.4.0
+  get: ^4.6.5
   image_picker: ^0.8.5
   intl: ^0.17.0
   move_to_background: ^1.0.2

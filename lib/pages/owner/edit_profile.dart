@@ -1,13 +1,8 @@
-import 'dart:io';
-
-import 'package:bluetooth_scale/utils/blue_singleton.dart';
+import 'package:bluetooth_scale/controller/owner_controller.dart';
+import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path_provider/path_provider.dart';
-
-import '../select_device.dart';
 
 class EditPofile extends StatefulWidget {
   const EditPofile({Key? key, this.fromSplash}) : super(key: key);
@@ -19,28 +14,19 @@ class EditPofile extends StatefulWidget {
 class _EditPofileState extends State<EditPofile> {
   final _formKey = GlobalKey<FormState>();
 
-  final RegExp _number = RegExp(r'^[0-9]{10}$');
-  final RegExp _email = RegExp(
-      r"^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$");
-
   final nameC = TextEditingController();
   final phoneC = TextEditingController();
   final emailC = TextEditingController();
   final businessC = TextEditingController();
-
-  final Future<SharedPreferences> prefs = SharedPreferences.getInstance();
-  XFile? xImage;
   final _imgPicker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    prefs.then((pref) {
-      nameC.text = pref.getString('name') ?? '';
-      phoneC.text = pref.getString('number') ?? '';
-      emailC.text = pref.getString('email') ?? '';
-      businessC.text = pref.getString('business') ?? '';
-    });
+    nameC.text = ownerController.owner.value.name;
+    phoneC.text = ownerController.owner.value.phone;
+    emailC.text = ownerController.owner.value.email;
+    businessC.text = ownerController.owner.value.business;
   }
 
   @override
@@ -53,11 +39,10 @@ class _EditPofileState extends State<EditPofile> {
   }
 
   void takePhoto(ImageSource _source) async {
-    await _imgPicker.pickImage(source: _source).then((value) {
-      setState(() {
-        xImage = value;
-        Singleton().profileImage = File(xImage!.path);
-      });
+    await _imgPicker.pickImage(source: _source).then((xfile) {
+      if (xfile != null) {
+        ownerController.updateImage(xfile);
+      }
     });
   }
 
@@ -70,54 +55,18 @@ class _EditPofileState extends State<EditPofile> {
           IconButton(
               tooltip: 'Save',
               onPressed: () async {
-                if (xImage != null) {
-                  Directory appDocDir =
-                      await getApplicationDocumentsDirectory();
-
-                  final pathx = path.basename(xImage!.path);
-                  final copyPath = path.join(appDocDir.path, pathx);
-                  await Singleton().profileImage!.copy(copyPath);
-                  prefs.then((value) async {
-                    var oldPath = value.getString('imgPath') ?? '';
-                    try {
-                      if (await File(oldPath).exists()) {
-                        await File(oldPath).delete();
-                      }
-                      debugPrint('${path.basename(oldPath)} Old Pic deleted');
-                    } on Exception catch (e) {
-                      debugPrint('Can\'t Delete...\n$e');
-                    }
-                    value.setString('imgPath', copyPath);
-                    debugPrint('${path.basename(copyPath)} New Pic added');
-                  });
-                  xImage = null;
-                }
-
                 if (_formKey.currentState!.validate()) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Saving..'),
                     backgroundColor: Colors.green,
                     duration: Duration(milliseconds: 800),
                   ));
-                  Singleton().name = nameC.text;
-                  Singleton().phone = phoneC.text;
-                  Singleton().email = emailC.text;
-                  Singleton().business = businessC.text;
-                  prefs.then((pref) {
-                    pref.setString('name', nameC.text);
-                    pref.setString('number', phoneC.text);
-                    pref.setString('email', emailC.text);
-                    pref.setString('business', businessC.text);
-                  }).then((value) {
-                    if (widget.fromSplash != null) {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SelectDevice()));
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  });
+
+                  ownerController.updateProfile(Owner(
+                      name: nameC.text,
+                      phone: phoneC.text,
+                      email: emailC.text,
+                      business: businessC.text));
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Please check your details'),
@@ -137,14 +86,17 @@ class _EditPofileState extends State<EditPofile> {
               children: [
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 70,
-                      backgroundColor: Colors.grey.shade100,
-                      backgroundImage: Singleton().profileImage == null
-                          ? const AssetImage('assets/bioz.png')
-                          : FileImage(Singleton().profileImage!)
-                              as ImageProvider,
-                    ),
+                    Obx(() {
+                      return CircleAvatar(
+                        radius: 70,
+                        backgroundColor: Colors.grey.shade100,
+                        backgroundImage:
+                            ownerController.profileImage.value == null
+                                ? const AssetImage('assets/bioz.png')
+                                : FileImage(ownerController.profileImage.value!)
+                                    as ImageProvider,
+                      );
+                    }),
                     Positioned(
                         bottom: 0,
                         right: 0,
@@ -196,7 +148,7 @@ class _EditPofileState extends State<EditPofile> {
                     controller: phoneC,
                     maxLength: 10,
                     validator: (value) {
-                      if (!_number.hasMatch(value!)) {
+                      if (!regExForPhone.hasMatch(value!)) {
                         return 'Please enter valid number';
                       }
                       return null;
@@ -217,7 +169,7 @@ class _EditPofileState extends State<EditPofile> {
                     controller: emailC,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (!_email.hasMatch(value!)) {
+                      if (!regExForEmail.hasMatch(value!)) {
                         return 'Please enter valid email';
                       }
                       return null;
