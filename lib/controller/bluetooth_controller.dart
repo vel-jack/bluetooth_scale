@@ -25,7 +25,6 @@ class BluetoothController extends GetxController {
   _onStateChanged(BluetoothState callback) {
     log(callback.toString(), name: 'BluetoothState');
     if (callback == BluetoothState.STATE_OFF) {
-      Get.snackbar('Blutooth OFF', 'Bluetooth services turned off');
       if (connection != null) {
         connection!.close();
         connectedDevice.value = null;
@@ -34,28 +33,27 @@ class BluetoothController extends GetxController {
   }
 
   void getPairedDevices() async {
-    if (await checkPermissions()) {
-      await requestPermissions();
-      try {
-        await FlutterBluetoothSerial.instance.ensurePermissions();
-        devices.value =
-            await FlutterBluetoothSerial.instance.getBondedDevices();
-      } catch (e) {
-        if (await Permission.location.isDenied) {
-          log('LOCATION PERMISSION : $e', name: 'getPairedDevices');
-          showMessage('Location Permission !',
-              'Please allow location permission in App settings');
-        }
-        if (await Permission.bluetooth.isDenied) {
-          log('BLUETOOTH PERMISSION  $e', name: 'getPairedDevices');
-          showMessage('Bluetooth Permission !',
-              'Please allow bluetooth permission in App settings');
-        }
+    // if (await checkPermissions()) {
+    // await requestPermissions();
+    try {
+      await FlutterBluetoothSerial.instance.ensurePermissions();
+      devices.value = await FlutterBluetoothSerial.instance.getBondedDevices();
+    } catch (e) {
+      if (await Permission.location.isDenied) {
+        log('LOCATION PERMISSION : $e', name: 'getPairedDevices');
+        showMessage('Location Permission !',
+            'Please allow location permission in App settings');
       }
-    } else {
-      showMessage('No permissions available',
-          'Please allow permissions in App Settings');
+      if (await Permission.bluetooth.isDenied) {
+        log('BLUETOOTH PERMISSION  $e', name: 'getPairedDevices');
+        showMessage('Bluetooth Permission !',
+            'Please allow bluetooth permission in App settings');
+      }
     }
+    // } else {
+    //   showMessage('No permissions available',
+    //       'Please allow permissions in App Settings');
+    // }
   }
 
   void connectToDevice(BluetoothDevice _device) async {
@@ -93,7 +91,7 @@ class BluetoothController extends GetxController {
   }
 
   void enableBluetooth() async {
-    await requestPermissions();
+    // await requestPermissions();
     try {
       await FlutterBluetoothSerial.instance.ensurePermissions();
       await FlutterBluetoothSerial.instance.requestEnable();
@@ -102,21 +100,20 @@ class BluetoothController extends GetxController {
     }
   }
 
-  Future<bool> checkPermissions() async {
-    if (await Permission.location.isPermanentlyDenied) {
-      return false;
-    } else if (await Permission.bluetooth.isPermanentlyDenied) {
-      return false;
-    }
-    return true;
-  }
+  // Future<bool> checkPermissions() async {
+  //   if (await Permission.location.isPermanentlyDenied) {
+  //     return false;
+  //   } else if (await Permission.bluetooth.isPermanentlyDenied) {
+  //     return false;
+  //   }
+  //   return true;
+  // }
 
-  Future<void> requestPermissions() async {
-    try {
-      await Permission.location.request();
-      await Permission.bluetooth.request();
-    } catch (_) {}
-  }
+  // Future<void> requestPermissions() async {
+  //   try {
+  //     await Permission.location.request();
+  //   } catch (_) {}
+  // }
 
   void showMessage(String title, String msg, {sec = 2}) {
     Get.snackbar(title, msg,

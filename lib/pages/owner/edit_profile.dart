@@ -87,14 +87,17 @@ class _EditPofileState extends State<EditPofile> {
                 Stack(
                   children: [
                     Obx(() {
-                      return CircleAvatar(
-                        radius: 70,
-                        backgroundColor: Colors.grey.shade100,
-                        backgroundImage:
-                            ownerController.profileImage.value == null
-                                ? const AssetImage('assets/bioz.png')
-                                : FileImage(ownerController.profileImage.value!)
-                                    as ImageProvider,
+                      return Hero(
+                        tag: 'owner_image',
+                        child: CircleAvatar(
+                          radius: 70,
+                          backgroundColor: Colors.grey.shade100,
+                          backgroundImage: ownerController.profileImage.value ==
+                                  null
+                              ? const AssetImage('assets/bioz.png')
+                              : FileImage(ownerController.profileImage.value!)
+                                  as ImageProvider,
+                        ),
                       );
                     }),
                     Positioned(

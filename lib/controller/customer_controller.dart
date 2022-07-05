@@ -33,4 +33,8 @@ class CustomerController extends GetxController {
     await _dbHelper!.deleteCustomer(uid);
     await loadCustomers();
   }
+
+  Customer getCustomerById(String uid) {
+    return _customers.value.firstWhere((customer) => customer.uid == uid);
+  }
 }

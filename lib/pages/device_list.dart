@@ -114,7 +114,7 @@ class _DeviceListState extends State<DeviceList> {
               ],
             );
           }
-          return BluetoothOff(onPressed: () {
+          return BluetoothOffWidget(onPressed: () {
             bluetoothController.enableBluetooth();
           });
         }));

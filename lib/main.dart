@@ -1,6 +1,7 @@
 import 'package:bluetooth_scale/controller/bluetooth_controller.dart';
 import 'package:bluetooth_scale/controller/customer_controller.dart';
 import 'package:bluetooth_scale/controller/owner_controller.dart';
+import 'package:bluetooth_scale/controller/transaction_controller.dart';
 import 'package:bluetooth_scale/pages/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ void main() {
   Get.put(BluetoothController());
   Get.put(OwnerController());
   Get.put(CustomerController());
+  Get.put(TransactionController());
   runApp(const MyApp());
 }
 
