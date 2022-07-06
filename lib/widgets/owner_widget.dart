@@ -1,4 +1,4 @@
-import 'package:bluetooth_scale/pages/owner/edit_profile.dart';
+import 'package:bluetooth_scale/pages/edit_owner_profile.dart';
 import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,8 +12,8 @@ class OwnerHeaderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       return UserAccountsDrawerHeader(
-        accountName: Text(ownerController.owner.value.name),
-        accountEmail: Text(ownerController.owner.value.email),
+        accountName: Text(ownerController.owner.name),
+        accountEmail: Text(ownerController.owner.email),
         currentAccountPicture: Hero(
           tag: 'owner_image',
           child: CircleAvatar(

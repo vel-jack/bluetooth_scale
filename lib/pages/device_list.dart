@@ -6,14 +6,9 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:get/state_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class DeviceList extends StatefulWidget {
+class DeviceList extends StatelessWidget {
   const DeviceList({Key? key}) : super(key: key);
 
-  @override
-  State<DeviceList> createState() => _DeviceListState();
-}
-
-class _DeviceListState extends State<DeviceList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

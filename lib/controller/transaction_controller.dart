@@ -4,8 +4,11 @@ import 'package:get/get.dart';
 
 class TransactionController extends GetxController {
   static TransactionController instance = Get.find();
-  Rx<List<TransactionX>> allTransactions = Rx<List<TransactionX>>([]);
-  Rx<List<TransactionX>> customerTransactions = Rx<List<TransactionX>>([]);
+  final Rx<List<TransactionX>> _allTransactions = Rx<List<TransactionX>>([]);
+  final Rx<List<TransactionX>> _customerTransactions =
+      Rx<List<TransactionX>>([]);
+  List<TransactionX> get allTransactions => _allTransactions.value;
+  List<TransactionX> get customerTransactions => _customerTransactions.value;
   DBHelper? _dbHelper;
   @override
   void onInit() {
@@ -15,12 +18,12 @@ class TransactionController extends GetxController {
   }
 
   Future<void> loadAllTransactions() async {
-    allTransactions.value = await _dbHelper!.getAllTx();
+    _allTransactions.value = await _dbHelper!.getAllTx();
   }
 
   Future<void> loadCustomerTransactions(String uid) async {
-    customerTransactions.value = [];
-    customerTransactions.value = allTransactions.value
+    _customerTransactions.value = [];
+    _customerTransactions.value = _allTransactions.value
         .where((transaction) => transaction.customerID == uid)
         .toList();
   }

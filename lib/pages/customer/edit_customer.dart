@@ -1,6 +1,7 @@
 import 'package:bluetooth_scale/model/customer.dart';
 import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:get/route_manager.dart';
 import 'package:intl/intl.dart';
 
 class EditCustomer extends StatefulWidget {
@@ -49,11 +50,9 @@ class _EditCustomerState extends State<EditCustomer> {
           TextButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Saving..'),
-                    duration: Duration(milliseconds: 500),
-                  ));
-
+                  Get.snackbar(
+                      'Saving..', 'Customer profile saved successfully ',
+                      leftBarIndicatorColor: Colors.green);
                   Customer customer = Customer(
                     name: nameC.text,
                     phone: phoneC.text,
@@ -61,7 +60,7 @@ class _EditCustomerState extends State<EditCustomer> {
                     aadhaar: aadhaarC.text,
                     address: addressC.text.trim(),
                   );
-
+                  // Todo pop added message
                   if (isNew) {
                     customer.createdAt = getDateTime();
                     customerController.addCutomer(customer);
@@ -72,11 +71,9 @@ class _EditCustomerState extends State<EditCustomer> {
                     Navigator.pop(context, customer);
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Validation error'),
-                    duration: Duration(milliseconds: 500),
-                    backgroundColor: Colors.red,
-                  ));
+                  Get.snackbar(
+                      'Validation error', 'Please provide valid informations',
+                      leftBarIndicatorColor: Colors.red);
                 }
               },
               child: Text(isNew ? 'Add' : 'Update')),

@@ -11,8 +11,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OwnerController extends GetxController {
   static OwnerController instance = Get.find();
   SharedPreferences? prefs;
-  Rx<Owner> owner = Rx<Owner>(Owner());
+  final Rx<Owner> _owner = Rx<Owner>(Owner());
   Rx<File?> profileImage = Rx<File?>(null);
+  Owner get owner => _owner.value;
 
   @override
   void onInit() {
@@ -22,23 +23,23 @@ class OwnerController extends GetxController {
 
   void loadFromPrefernces() async {
     prefs = await SharedPreferences.getInstance();
-    owner.value.name = prefs!.getString('name') ?? kAppName;
-    owner.value.email = prefs!.getString('email') ?? kBiozEmail;
-    owner.value.phone = prefs!.getString('phone') ?? '';
-    owner.value.name = prefs!.getString('business') ?? kCompanyName;
+    _owner.value.name = prefs!.getString('name') ?? kAppName;
+    _owner.value.email = prefs!.getString('email') ?? kBiozEmail;
+    _owner.value.phone = prefs!.getString('phone') ?? '';
+    _owner.value.name = prefs!.getString('business') ?? kCompanyName;
     final image = prefs!.getString('imagePath') ?? "";
     if (image.isNotEmpty) {
       profileImage.value = File(image);
     }
   }
 
-  void updateProfile(Owner _owner) async {
+  void updateProfile(Owner newOwner) async {
     prefs ??= await SharedPreferences.getInstance();
-    owner.value = _owner;
-    prefs!.setString('name', _owner.name);
-    prefs!.setString('email', _owner.email);
-    prefs!.setString('phone', _owner.phone);
-    prefs!.setString('business', _owner.business);
+    _owner.value = newOwner;
+    prefs!.setString('name', newOwner.name);
+    prefs!.setString('email', newOwner.email);
+    prefs!.setString('phone', newOwner.phone);
+    prefs!.setString('business', newOwner.business);
   }
 
   void updateImage(XFile xImage) async {

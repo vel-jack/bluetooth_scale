@@ -1,17 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'dart:typed_data';
-import 'package:bluetooth_scale/db/db_helper.dart';
+import 'package:bluetooth_scale/controller/search_controller.dart';
+import 'package:bluetooth_scale/model/customer.dart';
 import 'package:bluetooth_scale/model/transactionx.dart';
 import 'package:bluetooth_scale/pages/customer/edit_customer.dart';
 import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:search_page/search_page.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
-import '../model/customer.dart';
-import '../utils/blue_singleton.dart';
-import 'customer/customer_list.dart';
 
 class AddScale extends StatefulWidget {
   const AddScale({Key? key}) : super(key: key);
@@ -24,28 +23,22 @@ class _AddScaleState extends State<AddScale> {
   int totalGram = 0;
   bool isStarted = false;
   int cValue = 0;
-  String cdate = '';
-  DBHelper? dbHelper;
   bool isThousand = false;
   double limit = 600.0;
   double divider = 1000.0;
+  String _time = '';
 
   StreamController<int> streamController = StreamController<int>();
-
   StreamSink<int> get streamSink => streamController.sink;
   Stream<int> get streamData => streamController.stream;
-  List<Customer> customers = [];
   Customer? currentCustomer;
   final DateFormat formatter = DateFormat('dd/MM/yyyy hh:mm aa');
   StreamSubscription<Uint8List>? streamSubscription;
 
   @override
   void initState() {
-    dbHelper ??= DBHelper();
-    limit = Singleton().limit;
-    retriveCustomers();
-    setDate();
-    // bluetoothController.connection!.input!.listen(onDataReceived).onDone(() {});
+    streamSubscription =
+        bluetoothController.connection!.input!.listen(onDataReceived);
     super.initState();
   }
 
@@ -130,133 +123,48 @@ class _AddScaleState extends State<AddScale> {
                     onTap: () {
                       if (!bluetoothController.isConnected) {
                         showMessage(
-                            msg:
-                                'Please go back and CONNECT the device again !',
-                            color: Colors.red,
-                            duration: 1500);
+                          'Device disconnect',
+                          'Please go back and CONNECT the device again !',
+                          color: Colors.red,
+                        );
                         return;
                       }
                       if (isStarted) {
                         showMessage(
-                            msg:
-                                'Please press STOP before changing the Customer !!!',
-                            color: Colors.amber,
-                            duration: 2000);
+                          'Attention',
+                          'Please press STOP before changing the Customer !!!',
+                          color: Colors.amber,
+                        );
                         return;
                       }
-                      if (customers.isEmpty) {
+                      if (customerController.customers.isEmpty) {
+                        showMessage(
+                          'No customer selected',
+                          'Please select a customer to start',
+                        );
                         Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (builder) => const CustomerList()))
-                            .then((value) => retriveCustomers());
+                                    builder: (builder) => const EditCustomer()))
+                            .then((value) {
+                          setState(() {
+                            if (value != null) {
+                              currentCustomer = value;
+                            }
+                          });
+                        });
                         return;
                       }
                       showSearch(
-                          context: context,
-                          delegate: SearchPage<Customer>(
-                            barTheme: Theme.of(context).copyWith(
-                              textTheme: Theme.of(context).textTheme.copyWith(
-                                    headline6: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                              inputDecorationTheme: const InputDecorationTheme(
-                                hintStyle: TextStyle(
-                                  color: Colors.black38,
-                                  fontSize: 20,
-                                ),
-                                focusedErrorBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                border: InputBorder.none,
-                              ),
-                            ),
-                            builder: (customer) => ListTile(
-                              isThreeLine: true,
-                              onTap: () {
-                                Navigator.pop(context, customer);
-                              },
-                              leading: CircleAvatar(
-                                  child: Text(customer.name.substring(0, 1))),
-                              title: Text(customer.name),
-                              subtitle: Text(
-                                  'phone: ${customer.phone}\naadhaar: ${customer.aadhaar}'),
-                            ),
-                            suggestion: Column(
-                              children: [
-                                ListTile(
-                                  leading: const Icon(Icons.person_add),
-                                  title: const Text('Add new customer'),
-                                  onTap: () {
-                                    Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (builder) =>
-                                                    const EditCustomer()))
-                                        .then((value) {
-                                      Navigator.pop(context);
-                                      if (value != null) {
-                                        showMessage(
-                                            msg: 'Customer Added',
-                                            color: Colors.green,
-                                            duration: 1000);
-                                      }
-
-                                      retriveCustomers();
-                                    });
-                                  },
-                                ),
-                                Flexible(
-                                  child: ListView.builder(
-                                    itemCount: customers.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return ListTile(
-                                          isThreeLine: true,
-                                          onTap: () {
-                                            Navigator.pop(
-                                                context, customers[index]);
-                                          },
-                                          leading: CircleAvatar(
-                                              child: Text(customers[index]
-                                                  .name
-                                                  .substring(0, 1))),
-                                          title: Text(customers[index].name),
-                                          subtitle: Text(
-                                              'phone: ${customers[index].phone}\naadhaar: ${customers[index].aadhaar}'));
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            failure: Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'No Customers found.\n Search using Customer\'s name, phone or aadhaar number',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            searchLabel: 'Search Customer',
-                            filter: (customer) => [
-                              customer.name,
-                              customer.aadhaar,
-                              customer.phone
-                            ],
-                            items: customers,
-                          )).then((value) {
-                        if (value == null) return;
-                        debugPrint('${value.name} was selected');
-                        setState(() {
-                          currentCustomer = value;
-                        });
+                              context: context,
+                              delegate:
+                                  search(context, customerController.customers))
+                          .then((value) {
+                        if (value != null) {
+                          setState(() {
+                            currentCustomer = value;
+                          });
+                        }
                       });
                     },
                   ),
@@ -336,30 +244,31 @@ class _AddScaleState extends State<AddScale> {
                                   ? () {
                                       if (!bluetoothController.isConnected) {
                                         showMessage(
-                                            msg:
-                                                'Please go back and CONNECT the device again !',
-                                            color: Colors.red,
-                                            duration: 1500);
+                                          'Device disconnected',
+                                          'Please go back and CONNECT the device again !',
+                                          color: Colors.red,
+                                        );
                                         return;
                                       }
-                                      setDate();
                                       if (!isStarted) {
                                         setState(() {
                                           isStarted = !isStarted;
                                         });
                                         showMessage(
-                                            msg: 'Started',
-                                            color: Colors.blue,
-                                            duration: 1000);
+                                          'Started..',
+                                          '',
+                                          color: Colors.blue,
+                                        );
                                       } else {
                                         setState(() {
                                           isStarted = !isStarted;
                                         });
                                         streamSink.add(0);
                                         showMessage(
-                                            msg: 'Stopped',
-                                            color: Colors.blue,
-                                            duration: 1000);
+                                          'Stopped..',
+                                          '',
+                                          color: Colors.blue,
+                                        );
                                       }
                                     }
                                   : null,
@@ -389,36 +298,36 @@ class _AddScaleState extends State<AddScale> {
                             height: 40,
                             width: 100,
                             child: ElevatedButton.icon(
-                              onPressed: isStarted
-                                  ? () {
-                                      if (!bluetoothController.isConnected) {
-                                        showMessage(
-                                            msg:
-                                                'Go back and connect the device !',
-                                            color: Colors.red);
-                                        return;
-                                      }
-                                      if (cValue / divider <= limit) {
-                                        setState(() {
-                                          samples.add(cValue);
-                                          totalGram += cValue;
-                                        });
-                                      } else {
-                                        showMessage(
-                                            msg: 'Overwight',
-                                            color: Colors.red,
-                                            duration: 1000);
-                                      }
-                                    }
-                                  : null,
-                              // onPressed: () {
-                              //   final r = Random();
-                              //   var s = r.nextInt(100000);
-                              //   setState(() {
-                              //     samples.add(s);
-                              //     totalGram += s;
-                              //   });
-                              // },
+                              // onPressed: isStarted
+                              //     ? () {
+                              //         if (!bluetoothController.isConnected) {
+                              //           showMessage(
+                              //               msg:
+                              //                   'Go back and connect the device !',
+                              //               color: Colors.red);
+                              //           return;
+                              //         }
+                              //         if (cValue / divider <= limit) {
+                              //           setState(() {
+                              //             samples.add(cValue);
+                              //             totalGram += cValue;
+                              //           });
+                              //         } else {
+                              //           showMessage(
+                              //               msg: 'Overwight',
+                              //               color: Colors.red,
+                              //               duration: 1000);
+                              //         }
+                              //       }
+                              //     : null,
+                              onPressed: () {
+                                final r = Random();
+                                var s = r.nextInt(100000);
+                                setState(() {
+                                  samples.add(s);
+                                  totalGram += s;
+                                });
+                              },
                               label: const Text('Add'),
                               style: ElevatedButton.styleFrom(
                                   primary: Colors.blue),
@@ -448,7 +357,6 @@ class _AddScaleState extends State<AddScale> {
                 ElevatedButton(
                     onPressed: totalGram > 0.0
                         ? () {
-                            setDate();
                             showDialog(
                                 context: context,
                                 builder: (ctx) {
@@ -470,7 +378,7 @@ class _AddScaleState extends State<AddScale> {
                                         ])),
                                         Text.rich(TextSpan(children: [
                                           const TextSpan(text: 'Date : '),
-                                          TextSpan(text: cdate)
+                                          TextSpan(text: getTime())
                                         ])),
                                       ],
                                     ),
@@ -535,18 +443,14 @@ class _AddScaleState extends State<AddScale> {
     );
   }
 
-  void showMessage({required String msg, Color? color, int duration = 500}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: color,
-      duration: Duration(milliseconds: duration),
-    ));
+  void showMessage(String title, String msg, {Color? color}) {
+    Get.snackbar(title, msg, leftBarIndicatorColor: color);
   }
 
   void onDataReceived(Uint8List data) {
+    debugPrint(data.toList().toString());
     if (!isStarted) return;
     String dataString = String.fromCharCodes(data);
-
     // ? Version 1 - First Device
     // var qList = dataString.split('\t');
     // for (String q in qList) {
@@ -610,27 +514,19 @@ class _AddScaleState extends State<AddScale> {
     }
   }
 
-  Future<void> retriveCustomers() async {
-    dbHelper!.getCustomers().then((value) {
-      setState(() {
-        customers = value;
-      });
-    });
-  }
-
-  void setDate() {
+  String getTime() {
     DateTime now = DateTime.now();
-    setState(() {
-      cdate = formatter.format(now);
-    });
+    _time = formatter.format(now);
+    return _time;
   }
 
   void saveTransaction() {
     if (currentCustomer == null) {
       showMessage(
-          msg: 'Please select one Customer',
-          color: Colors.black,
-          duration: 700);
+        'No customer selected',
+        'Please select a customer to save',
+      );
+
       return;
     }
     try {
@@ -638,15 +534,16 @@ class _AddScaleState extends State<AddScale> {
           customerName: currentCustomer!.name,
           customerID: currentCustomer!.uid,
           weight: (totalGram / divider).toStringAsFixed(isThousand ? 2 : 3),
-          date: cdate);
-      dbHelper!.addTransaction(tx);
-      showMessage(msg: 'Saving weight...', color: Colors.green);
+          date: _time);
+      transactionController.addTransaction(tx);
+      showMessage('Saved', 'Saved succesfully', color: Colors.green);
       setState(() {
         totalGram = 0;
         samples.clear();
       });
     } catch (e) {
-      showMessage(msg: 'Can\'t save', color: Colors.red, duration: 800);
+      showMessage('Can\'t save', 'Something went wrong while saving',
+          color: Colors.red);
       debugPrint('can\'t save transaction');
     }
   }

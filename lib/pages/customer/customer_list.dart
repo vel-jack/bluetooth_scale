@@ -5,14 +5,9 @@ import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class CustomerList extends StatefulWidget {
+class CustomerList extends StatelessWidget {
   const CustomerList({Key? key}) : super(key: key);
 
-  @override
-  State<CustomerList> createState() => _CustomerListState();
-}
-
-class _CustomerListState extends State<CustomerList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

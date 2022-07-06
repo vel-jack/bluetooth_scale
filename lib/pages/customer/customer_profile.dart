@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:bluetooth_scale/db/db_helper.dart';
 import 'package:bluetooth_scale/model/customer.dart';
 import 'package:bluetooth_scale/model/transactionx.dart';
 import 'package:bluetooth_scale/utils/constants.dart';
@@ -20,57 +19,41 @@ class CustomerProfile extends StatefulWidget {
 
 class _CustomerProfileState extends State<CustomerProfile> {
   late Rx<Customer> customer = Rx<Customer>(widget.customer);
-  DBHelper? dbHelper;
-  List<TransactionX> txlist = [];
-
-  final _filePath = '/storage/emulated/0/Download/BScale';
 
   @override
   void initState() {
-    dbHelper ??= DBHelper();
-    refreshList();
+    transactionController.loadCustomerTransactions(widget.customer.uid);
     super.initState();
-  }
-
-  Future<void> refreshList() async {
-    List<TransactionX> temp = await dbHelper!.getCustomerTx(customer.value.uid);
-    setState(() {
-      txlist = temp;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: txlist.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                await refreshList();
-                if (txlist.isNotEmpty) {
-                  try {
-                    var dir = Directory(_filePath);
-                    if (!await dir.exists()) {
-                      await dir.create(recursive: true);
-                    }
-                    // print(
-                    //     '$_filePath/${customer.name}_${formatter.format(DateTime.now())}.pdf');
-                    final pdf = await PdfInvoiceApi.generate(
-                        loc:
-                            '$_filePath/${customer.value.name}_${customer.value.phone}.pdf',
-                        customer: customer.value,
-                        transactions: txlist);
-                    PdfApi.openFile(pdf);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Saved to downloads')));
-                  } catch (e) {
-                    debugPrint('Something happened...\n$e');
-                  }
-                }
-              },
-              icon: const Icon(Icons.description),
-              label: const Text('Download Receipt'),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          try {
+            var dir = Directory(filePath);
+            if (!await dir.exists()) {
+              await dir.create(recursive: true);
+            }
+            // print(
+            //     '$_filePath/${customer.name}_${formatter.format(DateTime.now())}.pdf');
+            final pdf = await PdfInvoiceApi.generate(
+                loc:
+                    '$filePath/${customer.value.name}_${customer.value.phone}.pdf',
+                customer: customer.value,
+                transactions: transactionController.customerTransactions);
+            PdfApi.openFile(pdf);
+
+            Get.snackbar('Saved', 'Saved documents to downloads',
+                leftBarIndicatorColor: Colors.green);
+          } catch (e) {
+            debugPrint('Something happened...\n$e');
+          }
+        },
+        icon: const Icon(Icons.description),
+        label: const Text('Download Receipt'),
+      ),
       appBar: AppBar(
         actions: [
           IconButton(
@@ -91,11 +74,10 @@ class _CustomerProfileState extends State<CustomerProfile> {
                                 await customerController
                                     .deleteCustomer(customer.value.uid);
                                 Navigator.pop(context);
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(const SnackBar(
-                                  content: Text('Deleted'),
-                                  duration: Duration(milliseconds: 500),
-                                ));
+
+                                Get.snackbar('Deleted',
+                                    'Customer profile and purchased history deleted',
+                                    leftBarIndicatorColor: Colors.yellow);
                               },
                               child: const Text(
                                 'Delete',
@@ -135,73 +117,79 @@ class _CustomerProfileState extends State<CustomerProfile> {
               child: Text('Purchased History',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
-            Flexible(
-              child: txlist.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text(
-                            'History is empty',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            '( ་ ⍸ ་ )',
-                            style: TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+            Obx(() {
+              return Flexible(
+                child: transactionController.customerTransactions.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text(
+                              'History is empty',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              '( ་ ⍸ ་ )',
+                              style: TextStyle(
+                                  fontSize: 24, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount:
+                            transactionController.customerTransactions.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          TransactionX transaction =
+                              transactionController.customerTransactions[index];
+                          return ListTile(
+                            tileColor:
+                                index % 2 == 0 ? Colors.grey.shade100 : null,
+                            // title: Text(txlist[index].customerName),
+                            title: Text(
+                              transaction.date,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            trailing: Text('${transaction.weight} g'),
+                            onTap: () {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                backgroundColor: Colors.blue,
+                                content: Text('Hold to delete'),
+                                duration: Duration(seconds: 1),
+                              ));
+                            },
+                            onLongPress: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (builder) => AlertDialog(
+                                        title: const Text('Want to Delete?'),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: const Text('Cancel')),
+                                          TextButton(
+                                              onPressed: () {
+                                                transactionController
+                                                    .deleteTransaction(
+                                                        transaction.tid!,
+                                                        transaction.customerID);
+                                                Navigator.pop(context);
+                                              },
+                                              child: const Text(
+                                                'Delete',
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              ))
+                                        ],
+                                      ));
+                            },
+                          );
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: txlist.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return ListTile(
-                          tileColor:
-                              index % 2 == 0 ? Colors.grey.shade100 : null,
-                          // title: Text(txlist[index].customerName),
-                          title: Text(
-                            txlist[index].date,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          trailing: Text('${txlist[index].weight} g'),
-                          onTap: () {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              backgroundColor: Colors.blue,
-                              content: Text('Hold to delete'),
-                              duration: Duration(seconds: 1),
-                            ));
-                          },
-                          onLongPress: () {
-                            showDialog(
-                                context: context,
-                                builder: (builder) => AlertDialog(
-                                      title: const Text('Want to Delete?'),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            child: const Text('Cancel')),
-                                        TextButton(
-                                            onPressed: () {
-                                              dbHelper!.deleteTransaction(
-                                                  txlist[index].tid!);
-                                              refreshList();
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text(
-                                              'Delete',
-                                              style:
-                                                  TextStyle(color: Colors.red),
-                                            ))
-                                      ],
-                                    ));
-                          },
-                        );
-                      },
-                    ),
-            ),
+              );
+            }),
           ],
         ),
       ),

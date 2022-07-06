@@ -1,5 +1,6 @@
 import 'package:bluetooth_scale/db/db_helper.dart';
 import 'package:bluetooth_scale/model/customer.dart';
+import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:get/get.dart';
 
 class CustomerController extends GetxController {
@@ -32,6 +33,7 @@ class CustomerController extends GetxController {
   Future<void> deleteCustomer(String uid) async {
     await _dbHelper!.deleteCustomer(uid);
     await loadCustomers();
+    await transactionController.loadAllTransactions();
   }
 
   Customer getCustomerById(String uid) {

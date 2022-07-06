@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:bluetooth_scale/db/db_helper.dart';
-import 'package:bluetooth_scale/utils/blue_singleton.dart';
+import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:bluetooth_scale/utils/pdf_api.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
@@ -20,10 +20,10 @@ class PdfInvoiceApi {
             flex: 4,
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(Singleton().business,
+              Text(ownerController.owner.business,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-              Text('Phone : +91-${Singleton().phone}'),
-              Text('Email : ${Singleton().email}'),
+              Text('Phone : +91-${ownerController.owner.phone}'),
+              Text('Email : ${ownerController.owner.email}'),
               Divider()
             ])),
         Expanded(flex: 6, child: SizedBox())

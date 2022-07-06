@@ -23,10 +23,10 @@ class _EditPofileState extends State<EditPofile> {
   @override
   void initState() {
     super.initState();
-    nameC.text = ownerController.owner.value.name;
-    phoneC.text = ownerController.owner.value.phone;
-    emailC.text = ownerController.owner.value.email;
-    businessC.text = ownerController.owner.value.business;
+    nameC.text = ownerController.owner.name;
+    phoneC.text = ownerController.owner.phone;
+    emailC.text = ownerController.owner.email;
+    businessC.text = ownerController.owner.business;
   }
 
   @override
@@ -56,22 +56,19 @@ class _EditPofileState extends State<EditPofile> {
               tooltip: 'Save',
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Saving..'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(milliseconds: 800),
-                  ));
-
+                  Get.snackbar('Saved', 'Your profile saved successfully',
+                      leftBarIndicatorColor: Colors.green);
                   ownerController.updateProfile(Owner(
                       name: nameC.text,
                       phone: phoneC.text,
                       email: emailC.text,
                       business: businessC.text));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Please check your details'),
-                    backgroundColor: Colors.red,
-                  ));
+                  Get.snackbar(
+                    "Validation error",
+                    'Please provide valid informations',
+                    leftBarIndicatorColor: Colors.red,
+                  );
                 }
               },
               icon: const Icon(Icons.done))

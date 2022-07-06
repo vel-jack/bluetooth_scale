@@ -10,14 +10,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 import 'customer/customer_profile.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
-
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     const navigationDrawer = DrawerWidget();
@@ -72,7 +66,7 @@ class _HomePageState extends State<HomePage> {
         body: Obx(() {
           return ListView(
             children: [
-              transactionController.allTransactions.value.isEmpty
+              transactionController.allTransactions.isEmpty
                   ? const Padding(
                       padding:
                           EdgeInsets.symmetric(horizontal: 20, vertical: 100),
@@ -96,11 +90,11 @@ class _HomePageState extends State<HomePage> {
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const ClampingScrollPhysics(),
-                          itemCount: transactionController
-                              .allTransactions.value.length,
+                          itemCount:
+                              transactionController.allTransactions.length,
                           itemBuilder: (BuildContext context, int index) {
-                            TransactionX transaction = transactionController
-                                .allTransactions.value[index];
+                            TransactionX transaction =
+                                transactionController.allTransactions[index];
                             return TransactionTile(
                                 transaction: transaction,
                                 index: index,
