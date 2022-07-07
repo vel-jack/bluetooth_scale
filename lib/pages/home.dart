@@ -66,13 +66,37 @@ class HomePage extends StatelessWidget {
         body: Obx(() {
           return ListView(
             children: [
+              Column(
+                children: [
+                  CircleAvatar(
+                    // backgroundColor: Colors.grey.shade100,
+                    radius: 70,
+                    backgroundImage: ownerController.profileImage.value == null
+                        ? const AssetImage('assets/bioz.png')
+                        : FileImage(ownerController.profileImage.value!)
+                            as ImageProvider,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      ownerController.owner.name,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  )
+                ],
+              ),
               transactionController.allTransactions.isEmpty
-                  ? const Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 100),
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
+                      ),
                       child: Text(
-                        'Tap the + button below to add new weight 👇️',
-                        style: TextStyle(
+                        bluetoothController.isConnected
+                            ? 'Tap the + button below to add new weight 👇️'
+                            : 'Tap the button to connect a device',
+                        style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),

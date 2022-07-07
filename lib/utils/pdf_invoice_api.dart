@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:bluetooth_scale/db/db_helper.dart';
+import 'package:bluetooth_scale/model/customer.dart';
+import 'package:bluetooth_scale/model/transactionx.dart';
 import 'package:bluetooth_scale/utils/constants.dart';
 import 'package:bluetooth_scale/utils/pdf_api.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
-
-import '../model/customer.dart';
-import '../model/transactionx.dart';
 
 class PdfInvoiceApi {
   static Future<File> generate(
@@ -50,20 +49,32 @@ class PdfInvoiceApi {
     }
 
     Widget transactionTable() {
-      final headers = ['Date', 'wt/gram', 'price/Rs'];
-      final data = transactions.map((tx) {
-        return [tx.date, '${tx.weight} g', 'Rs.0.0'];
-      }).toList();
+      final headers = ['No', 'Date', 'Gram', 'Type'];
+      // final data = transactions.map((tx) {
+      //   return [tx.date, '${tx.weight} g', 'GOLD'];
+      // }).toList();
+
+      final data = List.generate(
+          transactions.length,
+          (i) => [
+                i + 1,
+                transactions[i].date,
+                transactions[i].weight,
+                'GOLD'
+              ]).toList();
       return Table.fromTextArray(
         headers: headers,
         data: data,
         border: null,
+        oddRowDecoration: const BoxDecoration(color: PdfColors.grey100),
+        rowDecoration: const BoxDecoration(color: PdfColors.white),
         headerStyle: TextStyle(fontWeight: FontWeight.bold),
         headerDecoration: const BoxDecoration(color: PdfColors.grey300),
         cellAlignments: {
           0: Alignment.centerLeft,
-          1: Alignment.centerRight,
-          2: Alignment.centerRight
+          1: Alignment.centerLeft,
+          2: Alignment.centerRight,
+          3: Alignment.centerRight,
         },
       );
     }
@@ -99,6 +110,8 @@ class PdfInvoiceApi {
         headers: headers,
         data: data,
         border: null,
+        oddRowDecoration: const BoxDecoration(color: PdfColors.grey100),
+        rowDecoration: const BoxDecoration(color: PdfColors.white),
         headerStyle: TextStyle(fontWeight: FontWeight.bold),
         headerDecoration: const BoxDecoration(color: PdfColors.grey300),
         cellAlignments: {
@@ -113,19 +126,26 @@ class PdfInvoiceApi {
     Widget customerTable() {
       final headers = ['Name', 'Customer ID', 'Aadhar', 'Phone'];
       final data = customers.map((customer) {
-        return [customer.name, customer.uid, customer.aadhaar, customer.phone];
+        return [
+          customer.name,
+          customer.uid,
+          customer.aadhaar,
+          customer.phone,
+        ];
       }).toList();
       return Table.fromTextArray(
         headers: headers,
         data: data,
         border: null,
+        oddRowDecoration: const BoxDecoration(color: PdfColors.grey100),
+        rowDecoration: const BoxDecoration(color: PdfColors.white),
         headerStyle: TextStyle(fontWeight: FontWeight.bold),
         headerDecoration: const BoxDecoration(color: PdfColors.grey300),
         cellAlignments: {
-          0: Alignment.centerLeft,
-          1: Alignment.centerLeft,
-          2: Alignment.centerLeft,
-          3: Alignment.centerLeft
+          0: Alignment.topLeft,
+          1: Alignment.topLeft,
+          2: Alignment.topLeft,
+          3: Alignment.topLeft,
         },
       );
     }

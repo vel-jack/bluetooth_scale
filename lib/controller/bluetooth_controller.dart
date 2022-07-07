@@ -72,7 +72,9 @@ class BluetoothController extends GetxController {
       }).catchError((onError) {
         isConnecting.value = false;
         log('$onError', name: "ConnectToDevice");
-        showMessage('Something went wrong', 'Can\'t connect with the device');
+        showMessage(
+            'Something went wrong', 'Can\'t connect with the device\n$onError',
+            sec: 4);
       });
     } catch (e) {
       log('$e', name: 'ConnectToDevice - Connect');

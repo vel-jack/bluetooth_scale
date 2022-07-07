@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'dart:typed_data';
 import 'package:bluetooth_scale/controller/search_controller.dart';
@@ -298,36 +297,38 @@ class _AddScaleState extends State<AddScale> {
                             height: 40,
                             width: 100,
                             child: ElevatedButton.icon(
-                              // onPressed: isStarted
-                              //     ? () {
-                              //         if (!bluetoothController.isConnected) {
-                              //           showMessage(
-                              //               msg:
-                              //                   'Go back and connect the device !',
-                              //               color: Colors.red);
-                              //           return;
-                              //         }
-                              //         if (cValue / divider <= limit) {
-                              //           setState(() {
-                              //             samples.add(cValue);
-                              //             totalGram += cValue;
-                              //           });
-                              //         } else {
-                              //           showMessage(
-                              //               msg: 'Overwight',
-                              //               color: Colors.red,
-                              //               duration: 1000);
-                              //         }
-                              //       }
-                              //     : null,
-                              onPressed: () {
-                                final r = Random();
-                                var s = r.nextInt(100000);
-                                setState(() {
-                                  samples.add(s);
-                                  totalGram += s;
-                                });
-                              },
+                              onPressed: isStarted
+                                  ? () {
+                                      if (!bluetoothController.isConnected) {
+                                        showMessage(
+                                          'Device disconnected',
+                                          'Please go back and CONNECT the device again !',
+                                          color: Colors.red,
+                                        );
+                                        return;
+                                      }
+                                      if (cValue / divider <= limit) {
+                                        setState(() {
+                                          samples.add(cValue);
+                                          totalGram += cValue;
+                                        });
+                                      } else {
+                                        showMessage(
+                                          'Over weight',
+                                          'Current weight exceeded the limit !',
+                                          color: Colors.red,
+                                        );
+                                      }
+                                    }
+                                  : null,
+                              // onPressed: () {
+                              //   final r = Random();
+                              //   var s = r.nextInt(100000);
+                              //   setState(() {
+                              //     samples.add(s);
+                              //     totalGram += s;
+                              //   });
+                              // },
                               label: const Text('Add'),
                               style: ElevatedButton.styleFrom(
                                   primary: Colors.blue),

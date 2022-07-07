@@ -45,7 +45,8 @@ android {
         // ?  Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.bioz.bscale"
         minSdkVersion 19
-        targetSdkVersion flutter.targetSdkVersion
+        // targetSdkVersion flutter.targetSdkVersion
+        targetSdkVersion 30
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true

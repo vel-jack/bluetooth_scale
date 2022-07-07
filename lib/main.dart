@@ -25,13 +25,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'BScale',
       theme: ThemeData(
-          primarySwatch: Colors.blue,
-          fontFamily: 'Nunito',
-          appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              elevation: 0),
-          scaffoldBackgroundColor: Colors.white),
+        primarySwatch: Colors.blue,
+        fontFamily: 'Nunito',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+      ),
       home: const HomePage(),
     );
   }

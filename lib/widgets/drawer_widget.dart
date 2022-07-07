@@ -40,8 +40,9 @@ class DrawerWidget extends StatelessWidget {
                     '$filePath/CompleteDetails_${formatter.format(DateTime.now())}.pdf');
                 await PdfApi.openFile(pdf);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Exported to Downloads')));
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //     const SnackBar(content: Text('Exported to Downloads')));
+                Get.snackbar('Exported', 'Exported to Downloads');
                 // await pdf.copy(
                 //     '/storage/emulated/0/Download/CompleteDetail${formatter.format(DateTime.now())}.pdf');
               } catch (e) {
