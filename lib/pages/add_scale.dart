@@ -449,7 +449,6 @@ class _AddScaleState extends State<AddScale> {
   }
 
   void onDataReceived(Uint8List data) {
-    debugPrint(data.toList().toString());
     if (!isStarted) return;
     String dataString = String.fromCharCodes(data);
     // ? Version 1 - First Device
@@ -504,13 +503,13 @@ class _AddScaleState extends State<AddScale> {
       }
       var pQ = int.tryParse(q);
       // Todo = Ask for over limit condition
-      debugPrint('q = $q pQ = $pQ');
+      // debugPrint('q = $q pQ = $pQ');
       try {
         if (!streamController.isClosed) {
           streamSink.add(pQ!);
         }
-      } catch (e) {
-        debugPrint("at 638: pQ = $pQ, q = $q,\n$e");
+      } catch (_) {
+        // debugPrint("at 638: pQ = $pQ, q = $q,\n$e");
       }
     }
   }
@@ -545,7 +544,7 @@ class _AddScaleState extends State<AddScale> {
     } catch (e) {
       showMessage('Can\'t save', 'Something went wrong while saving',
           color: Colors.red);
-      debugPrint('can\'t save transaction');
+      // debugPrint('can\'t save transaction');
     }
   }
 }

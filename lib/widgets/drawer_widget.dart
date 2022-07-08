@@ -46,7 +46,7 @@ class DrawerWidget extends StatelessWidget {
                 // await pdf.copy(
                 //     '/storage/emulated/0/Download/CompleteDetail${formatter.format(DateTime.now())}.pdf');
               } catch (e) {
-                debugPrint('Something happened...\n$e');
+                // debugPrint('Something happened...\n$e');
 
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text('Failed to export'),

@@ -1,6 +1,5 @@
 import 'package:bluetooth_scale/model/customer.dart';
 import 'package:bluetooth_scale/model/transactionx.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -40,8 +39,8 @@ class DBHelper {
     try {
       await dbClient.rawInsert(
           "INSERT INTO transactionx(customerID,customerName,weight,date) VALUES('${tx.customerID}','${tx.customerName}','${tx.weight}','${tx.date}')");
-    } on Exception catch (e) {
-      debugPrint('InsertionError $e');
+    } catch (_) {
+      // debugPrint('InsertionError $e');
     }
   }
 

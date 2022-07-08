@@ -2,7 +2,7 @@ import 'package:bluetooth_scale/controller/bluetooth_controller.dart';
 import 'package:bluetooth_scale/controller/customer_controller.dart';
 import 'package:bluetooth_scale/controller/owner_controller.dart';
 import 'package:bluetooth_scale/controller/transaction_controller.dart';
-import 'package:bluetooth_scale/pages/home.dart';
+import 'package:bluetooth_scale/pages/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const HomePage(),
+      home: const SplashScreen(),
     );
   }
 }

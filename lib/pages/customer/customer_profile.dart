@@ -47,8 +47,8 @@ class _CustomerProfileState extends State<CustomerProfile> {
 
             Get.snackbar('Saved', 'Saved documents to downloads',
                 leftBarIndicatorColor: Colors.green);
-          } catch (e) {
-            debugPrint('Something happened...\n$e');
+          } catch (_) {
+            // debugPrint('Something happened...\n$e');
           }
         },
         icon: const Icon(Icons.description),

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart' as x;
 import 'package:open_file/open_file.dart';
 import 'package:pdf/widgets.dart';
 
@@ -21,8 +20,8 @@ class PdfApi {
     final url = file.path;
     try {
       await OpenFile.open(url);
-    } catch (e) {
-      x.debugPrint('Something happened...!!!\n$e');
+    } catch (_) {
+      // x.debugPrint('Something happened...!!!\n$e');
     }
   }
 }
