@@ -22,7 +22,9 @@ class CustomerList extends StatelessWidget {
                       context: context,
                       delegate: search(context, customerController.customers))
                   .then((value) {
-                // debugPrint('$value');
+                if (value != null) {
+                  Get.to(() => CustomerProfile(customer: value));
+                }
               });
             },
             icon: const Icon(Icons.search_rounded))

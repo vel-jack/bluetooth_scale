@@ -39,18 +39,32 @@ SearchPage<Customer> search(BuildContext context, List<Customer> customers) {
         Navigator.pop(context, customer);
       },
     ),
-    suggestion: const Padding(
-      padding: EdgeInsets.all(20.0),
-      child: Text(
-        'Search your customers using NAME, AADHAAR, PHONE',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
+    suggestion: ListView.builder(
+      itemCount: customers.length,
+      itemBuilder: (BuildContext context, int index) {
+        Customer customer = customers[index];
+        return ListTile(
+          leading: CircleAvatar(
+              child: Text(
+            customer.name.substring(0, 1).toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          )),
+          title: Text(
+            customer.name,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          subtitle:
+              Text('phone: ${customer.phone}\naadhaar: ${customer.aadhaar}'),
+          onTap: () {
+            Navigator.pop(context, customer);
+          },
+        );
+      },
     ),
     failure: const Padding(
       padding: EdgeInsets.all(20.0),
       child: Text(
-        'No matching customer found, Please try different',
+        'No matching customer found, Search your customers using NAME, AADHAAR, PHONE ',
         textAlign: TextAlign.center,
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
