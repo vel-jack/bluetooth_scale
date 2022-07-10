@@ -28,8 +28,11 @@ class TransactionController extends GetxController {
         .toList();
   }
 
-  Future<void> deleteTransaction(int transactionId, String uid) async {
-    await _dbHelper!.deleteTransaction(transactionId);
+  Future<void> deleteTransactions(
+      List<TransactionX> transactions, String uid) async {
+    for (final x in transactions) {
+      await _dbHelper!.deleteTransaction(x.tid!);
+    }
     await loadAllTransactions();
     await loadCustomerTransactions(uid);
   }

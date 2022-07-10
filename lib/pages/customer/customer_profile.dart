@@ -19,6 +19,7 @@ class CustomerProfile extends StatefulWidget {
 
 class _CustomerProfileState extends State<CustomerProfile> {
   late Rx<Customer> customer = Rx<Customer>(widget.customer);
+  List<int> selectedIndex = [];
 
   @override
   void initState() {
@@ -31,6 +32,10 @@ class _CustomerProfileState extends State<CustomerProfile> {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
+          final transactions = selectedIndex
+              .map((e) => transactionController.customerTransactions[e])
+              .toList();
+          setState(() => selectedIndex.clear());
           try {
             var dir = Directory(filePath);
             if (!await dir.exists()) {
@@ -39,56 +44,102 @@ class _CustomerProfileState extends State<CustomerProfile> {
             // print(
             //     '$_filePath/${customer.name}_${formatter.format(DateTime.now())}.pdf');
             final pdf = await PdfInvoiceApi.generate(
-                loc:
-                    '$filePath/${customer.value.name}_${customer.value.phone}.pdf',
-                customer: customer.value,
-                transactions: transactionController.customerTransactions);
+              loc:
+                  '$filePath/${customer.value.name}_${customer.value.phone}.pdf',
+              customer: customer.value,
+              transactions: transactions.isEmpty
+                  ? transactionController.customerTransactions
+                  : transactions,
+            );
             PdfApi.openFile(pdf);
-
             Get.snackbar('Saved', 'Saved documents to downloads',
                 leftBarIndicatorColor: Colors.green);
           } catch (_) {
             // debugPrint('Something happened...\n$e');
           }
         },
-        icon: const Icon(Icons.description),
+        icon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selectedIndex.isNotEmpty) Text('${selectedIndex.length}x'),
+            const Icon(Icons.description),
+          ],
+        ),
         label: const Text('Download Receipt'),
       ),
       appBar: AppBar(
         actions: [
-          IconButton(
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (builder) => AlertDialog(
-                        title: const Text('Delete Customer'),
-                        content: Text(
-                            'Also ${customer.value.name}\'s purchase history will be deleted'),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Cancel')),
-                          TextButton(
-                              onPressed: () async {
-                                Navigator.pop(context);
-                                await customerController
-                                    .deleteCustomer(customer.value.uid);
-                                Navigator.pop(context);
+          selectedIndex.isNotEmpty
+              ? IconButton(
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (builder) => AlertDialog(
+                              title: const Text('Please confirm'),
+                              content: Text(
+                                  'Want to delete ${selectedIndex.length} item(s)?\n(Cannot recover after deletion)'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel')),
+                                TextButton(
+                                    onPressed: () {
+                                      final transactions = selectedIndex
+                                          .map((e) => transactionController
+                                              .customerTransactions[e])
+                                          .toList();
+                                      transactionController.deleteTransactions(
+                                          transactions, customer.value.uid);
+                                      selectedIndex.clear();
+                                      setState(() {});
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ))
+                              ],
+                            ));
+                  },
+                  icon: const Icon(Icons.delete_sweep))
+              : PopupMenuButton(onSelected: (value) {
+                  if (value == 0) {
+                    showDialog(
+                        context: context,
+                        builder: (builder) => AlertDialog(
+                              title: const Text('Delete Customer'),
+                              content: Text(
+                                  'Also ${customer.value.name}\'s purchase history will be deleted'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel')),
+                                TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(context);
+                                      await customerController
+                                          .deleteCustomer(customer.value.uid);
+                                      Navigator.pop(context);
 
-                                Get.snackbar('Deleted',
-                                    'Customer profile and purchased history deleted',
-                                    leftBarIndicatorColor: Colors.yellow);
-                              },
-                              child: const Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ))
-                        ],
-                      ));
-            },
-            icon: const Icon(Icons.delete),
-            tooltip: 'Delete Customer',
-          )
+                                      Get.snackbar('Deleted',
+                                          'Customer profile and purchased history deleted',
+                                          leftBarIndicatorColor: Colors.yellow);
+                                    },
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ))
+                              ],
+                            ));
+                  }
+                }, itemBuilder: (context) {
+                  return const [
+                    PopupMenuItem(
+                      child: Text('Delete Customer'),
+                      value: 0,
+                    )
+                  ];
+                }),
         ],
       ),
       body: Padding(
@@ -136,54 +187,48 @@ class _CustomerProfileState extends State<CustomerProfile> {
                           ],
                         ),
                       )
-                    : ListView.builder(
+                    : ListView.separated(
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
                         itemCount:
                             transactionController.customerTransactions.length,
                         itemBuilder: (BuildContext context, int index) {
                           TransactionX transaction =
                               transactionController.customerTransactions[index];
                           return ListTile(
-                            tileColor:
-                                index % 2 == 0 ? Colors.grey.shade100 : null,
-                            // title: Text(txlist[index].customerName),
                             title: Text(
                               transaction.date,
                               style: const TextStyle(fontSize: 14),
                             ),
                             trailing: Text('${transaction.weight} g'),
                             onTap: () {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                backgroundColor: Colors.blue,
-                                content: Text('Hold to delete'),
-                                duration: Duration(seconds: 1),
-                              ));
+                              if (selectedIndex.isEmpty) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  backgroundColor: Colors.blue,
+                                  content:
+                                      Text('Hold/long press to select item'),
+                                  duration: Duration(seconds: 1),
+                                ));
+                              } else {
+                                if (selectedIndex.contains(index)) {
+                                  selectedIndex.remove(index);
+                                } else {
+                                  selectedIndex.add(index);
+                                }
+                                setState(() {});
+                              }
                             },
+                            tileColor: selectedIndex.contains(index)
+                                ? Colors.blue.shade100
+                                : null,
                             onLongPress: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (builder) => AlertDialog(
-                                        title: const Text('Want to Delete?'),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: const Text('Cancel')),
-                                          TextButton(
-                                              onPressed: () {
-                                                transactionController
-                                                    .deleteTransaction(
-                                                        transaction.tid!,
-                                                        transaction.customerID);
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                    color: Colors.red),
-                                              ))
-                                        ],
-                                      ));
+                              if (selectedIndex.contains(index)) {
+                                selectedIndex.remove(index);
+                              } else {
+                                selectedIndex.add(index);
+                              }
+                              setState(() {});
                             },
                           );
                         },

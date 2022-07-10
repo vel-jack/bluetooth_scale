@@ -49,7 +49,7 @@ class PdfInvoiceApi {
     }
 
     Widget transactionTable() {
-      final headers = ['No', 'Date', 'Gram', 'Type'];
+      final headers = ['No', 'Date', 'wt/gram', 'Type'];
       // final data = transactions.map((tx) {
       //   return [tx.date, '${tx.weight} g', 'GOLD'];
       // }).toList();
@@ -59,7 +59,7 @@ class PdfInvoiceApi {
           (i) => [
                 i + 1,
                 transactions[i].date,
-                transactions[i].weight,
+                '${transactions[i].weight}g',
                 'GOLD'
               ]).toList();
       return Table.fromTextArray(
@@ -104,7 +104,7 @@ class PdfInvoiceApi {
     Widget transactionTable() {
       final headers = ['Customer', 'Customer ID', 'Date', 'wt/gram'];
       final data = transactions.map((tx) {
-        return [tx.customerName, tx.customerID, tx.date, '${tx.weight} g'];
+        return [tx.customerName, tx.customerID, tx.date, '${tx.weight}g'];
       }).toList();
       return Table.fromTextArray(
         headers: headers,
