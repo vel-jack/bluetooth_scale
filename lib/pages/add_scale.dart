@@ -90,82 +90,101 @@ class _AddScaleState extends State<AddScale> {
               color: Colors.white,
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  InkWell(
-                    child: Container(
-                      margin: const EdgeInsets.only(
-                          left: 10, right: 10, bottom: 10),
-                      decoration: BoxDecoration(
-                          color: isStarted ? Colors.grey.shade100 : null,
-                          border: Border.all(color: Colors.black12),
-                          borderRadius: BorderRadius.circular(100)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Icon(
-                                currentCustomer == null
-                                    ? Icons.search_rounded
-                                    : Icons.person_rounded,
-                                color: Colors.grey),
-                          ),
-                          Text(
-                            currentCustomer == null
-                                ? 'Select Customer'
-                                : currentCustomer!.name.toUpperCase(),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(50),
                     ),
-                    onTap: () {
-                      if (!bluetoothController.isConnected) {
-                        showMessage(
-                          'Device disconnect',
-                          'Please go back and CONNECT the device again !',
-                          color: Colors.red,
-                        );
-                        return;
-                      }
-                      if (isStarted) {
-                        showMessage(
-                          'Attention',
-                          'Please press STOP before changing the Customer !!!',
-                          color: Colors.amber,
-                        );
-                        return;
-                      }
-                      if (customerController.customers.isEmpty) {
-                        showMessage(
-                          'No customer selected',
-                          'Please select a customer to start',
-                        );
-                        Navigator.push(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: InkWell(
+                            onTap: () {
+                              if (!bluetoothController.isConnected) {
+                                showMessage(
+                                  'Device disconnect',
+                                  'Please go back and CONNECT the device again !',
+                                  color: Colors.red,
+                                );
+                                return;
+                              }
+                              if (isStarted) {
+                                showMessage(
+                                  'Attention',
+                                  'Please press STOP before changing the Customer !!!',
+                                  color: Colors.amber,
+                                );
+                                return;
+                              }
+
+                              showSearch(
+                                      context: context,
+                                      delegate: search(context,
+                                          customerController.customers))
+                                  .then((value) {
+                                if (value != null) {
+                                  setState(() {
+                                    currentCustomer = value;
+                                  });
+                                }
+                              });
+                            },
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    currentCustomer == null
+                                        ? 'No customer selected'
+                                        : currentCustomer!.name.toUpperCase(),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const Icon(Icons.search_rounded)
+                              ],
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Add new customer',
+                          onPressed: () {
+                            if (!bluetoothController.isConnected) {
+                              showMessage(
+                                'Device disconnect',
+                                'Please go back and CONNECT the device again !',
+                                color: Colors.red,
+                              );
+                              return;
+                            }
+                            if (isStarted) {
+                              showMessage(
+                                'Attention',
+                                'Please press STOP before changing the Customer !!!',
+                                color: Colors.amber,
+                              );
+                              return;
+                            }
+                            Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (builder) => const EditCustomer()))
-                            .then((value) {
-                          setState(() {
-                            if (value != null) {
-                              currentCustomer = value;
-                            }
-                          });
-                        });
-                        return;
-                      }
-                      showSearch(
-                              context: context,
-                              delegate:
-                                  search(context, customerController.customers))
-                          .then((value) {
-                        if (value != null) {
-                          setState(() {
-                            currentCustomer = value;
-                          });
-                        }
-                      });
-                    },
+                                    builder: (builder) =>
+                                        const EditCustomer())).then((value) {
+                              setState(() {
+                                if (value != null) {
+                                  currentCustomer = value;
+                                }
+                              });
+                            });
+                          },
+                          icon: const Icon(Icons.person_add),
+                        ),
+                      ],
+                    ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -445,7 +464,13 @@ class _AddScaleState extends State<AddScale> {
   }
 
   void showMessage(String title, String msg, {Color? color}) {
-    Get.snackbar(title, msg, leftBarIndicatorColor: color);
+    Get.snackbar(
+      title,
+      msg,
+      leftBarIndicatorColor: color,
+      duration: const Duration(seconds: 1),
+      animationDuration: const Duration(milliseconds: 500),
+    );
   }
 
   void onDataReceived(Uint8List data) {
