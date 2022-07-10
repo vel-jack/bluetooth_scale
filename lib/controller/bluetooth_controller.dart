@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -41,11 +42,14 @@ class BluetoothController extends GetxController {
     } catch (e) {
       if (await Permission.location.isDenied) {
         log('LOCATION PERMISSION : $e', name: 'getPairedDevices');
+        debugPrint('getPairedDevices : LOCATION PERMISSION : $e');
+
         showMessage('Location Permission !',
             'Please allow location permission in App settings');
       }
       if (await Permission.bluetooth.isDenied) {
         log('BLUETOOTH PERMISSION  $e', name: 'getPairedDevices');
+        debugPrint('getPairedDevices : BLUETOOTH PERMISSION : $e');
         showMessage('Bluetooth Permission !',
             'Please allow bluetooth permission in App settings');
       }
@@ -68,15 +72,20 @@ class BluetoothController extends GetxController {
         cnx.input!.listen(null).onDone(() {
           connection = null;
           connectedDevice.value = null;
+          showMessage(
+            'Disconnected',
+            'Device connection lost',
+          );
         });
       }).catchError((onError) {
         isConnecting.value = false;
         log('$onError', name: "ConnectToDevice");
-        showMessage('Something went wrong', 'Can\'t connect with the device',
-            sec: 4);
+        debugPrint('ConnectToDevice - $onError');
+        showMessage('Something went wrong', 'Can\'t connect with the device');
       });
     } catch (e) {
       log('$e', name: 'ConnectToDevice - Connect');
+      debugPrint('ConnectToDevice catch - $e');
       isConnecting.value = false;
     }
   }
@@ -87,6 +96,7 @@ class BluetoothController extends GetxController {
       showMessage('Disconnected', '');
     } catch (e) {
       log('$e', name: 'disconnect');
+      debugPrint('disconnect -$e');
       showMessage('Something went wrong', 'Can\'t disconnect device');
     }
   }
@@ -98,6 +108,7 @@ class BluetoothController extends GetxController {
       await FlutterBluetoothSerial.instance.requestEnable();
     } catch (e) {
       log('$e');
+      debugPrint('enableBluetooth - $e');
     }
   }
 

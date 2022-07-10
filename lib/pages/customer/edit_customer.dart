@@ -51,8 +51,12 @@ class _EditCustomerState extends State<EditCustomer> {
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   Get.snackbar(
-                      'Saving..', 'Customer profile saved successfully ',
-                      leftBarIndicatorColor: Colors.green);
+                    'Saving..',
+                    'Customer profile saved successfully ',
+                    leftBarIndicatorColor: Colors.green,
+                    duration: const Duration(seconds: 1),
+                    animationDuration: const Duration(milliseconds: 500),
+                  );
                   Customer customer = Customer(
                     name: nameC.text,
                     phone: phoneC.text,
@@ -72,8 +76,12 @@ class _EditCustomerState extends State<EditCustomer> {
                   }
                 } else {
                   Get.snackbar(
-                      'Validation error', 'Please provide valid informations',
-                      leftBarIndicatorColor: Colors.red);
+                    'Validation error',
+                    'Please provide valid informations',
+                    leftBarIndicatorColor: Colors.red,
+                    duration: const Duration(seconds: 1),
+                    animationDuration: const Duration(milliseconds: 500),
+                  );
                 }
               },
               child: Text(isNew ? 'Add' : 'Update')),
