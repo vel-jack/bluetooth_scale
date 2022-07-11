@@ -18,7 +18,7 @@ class DrawerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DateFormat formatter = DateFormat('ddMMyyyyhhmmss');
-    return ListView(
+    return Column(
       children: [
         const OwnerHeaderWidget(),
         ListTile(
@@ -100,6 +100,21 @@ class DrawerWidget extends StatelessWidget {
                   ))
             ],
           ),
+        ),
+        const Spacer(),
+        ListTile(
+          leading: Image.asset(
+            'assets/logo.png',
+          ),
+        ),
+        const ListTile(
+          title: Text(
+            'BIOZ',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text('Bluetooth Scale'),
+          trailing: Text(
+              'v0.0.1'), // TODO - Need to correct before exporting to release mode
         ),
       ],
     );

@@ -83,6 +83,11 @@ class PdfInvoiceApi {
     final pdf = Document(
         theme: ThemeData(defaultTextStyle: TextStyle(font: Font.ttf(font))));
     pdf.addPage(MultiPage(
+        footer: (context) => Row(children: [
+              Text('BIOZ'),
+              Spacer(),
+              Text('https://www.bioz.in'),
+            ]),
         build: (build) => [
               sellerDetails(),
               customerDetail(),
@@ -153,6 +158,11 @@ class PdfInvoiceApi {
     final pdf = Document(
         theme: ThemeData(defaultTextStyle: TextStyle(font: Font.ttf(font))));
     pdf.addPage(MultiPage(
+        footer: (context) => Row(children: [
+              Text('BIOZ'),
+              Spacer(),
+              Text('https://www.bioz.in'),
+            ]),
         build: (build) => [
               Text('Customers : ',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
